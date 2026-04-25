@@ -1,73 +1,134 @@
-# React + TypeScript + Vite
+# BioReactor Token (BRT)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+BioReactor Token is a Monad hackathon MVP that turns small urban **Wolffia** bioreactors into an interactive onchain story.
 
-Currently, two official plugins are available:
+The idea: make sustainable protein production feel tangible for an audience. Each reactor has a location, production metrics, water savings, and a funding flow connected to **Monad testnet**. Supporters can back a reactor with MON and receive **BRT** tokens as proof of participation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Live demo
 
-## React Compiler
+- App: https://brt-mvp.vercel.app
+- Repository: https://github.com/godin-001/bioreactor-token-mvp
+- Contract (Monad testnet): `0xf0e9abe7d91f004538d5eef4d4fd65cf8973448a`
+- Explorer: https://testnet.monadscan.com/address/0xf0e9abe7d91f004538d5eef4d4fd65cf8973448a
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Problem
 
-## Expanding the ESLint configuration
+Protein production is resource-intensive and usually invisible to the public.
+This MVP explores a more engaging model:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- showcase compact, sustainable Wolffia reactors
+- track impact in a simple visual interface
+- let people support specific reactors onchain
+- mint a tokenized record of that support
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## What the MVP does
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Frontend
+- Landing page focused on pitch/demo clarity
+- Reactor cards with city, species, biomass, protein %, and water savings
+- Wallet connection flow
+- Support flow to send MON to a selected reactor
+- Live stats pulled from the smart contract when available
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Smart contract
+- Deploys a seeded set of demo reactors
+- Accepts support for a reactor via `supportReactor`
+- Mints BRT tokens to supporters
+- Tracks total support and biomass metrics
+- Allows owner-side harvest logging with `logHarvest`
+
+## Tech stack
+
+- React
+- TypeScript
+- Vite
+- viem
+- Solidity
+- OpenZeppelin
+- Monad Testnet
+- Vercel
+
+## How it works
+
+1. The contract is deployed on Monad testnet.
+2. The frontend reads reactor data and aggregate stats from the contract.
+3. A user connects a wallet.
+4. The user chooses a reactor and supports it with MON.
+5. The contract records the support and mints BRT tokens.
+
+## Local development
+
+### Requirements
+- Node.js 20+
+- npm
+
+### Install
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Run locally
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+### Build
+
+```bash
+npm run build
+```
+
+## Environment variables
+
+Create `.env.local` based on `.env.example`:
+
+```bash
+VITE_BRT_CONTRACT_ADDRESS=0xf0e9abe7d91f004538d5eef4d4fd65cf8973448a
+DEPLOYER_PRIVATE_KEY=your_private_key_here
+```
+
+## Deploy contract to Monad testnet
+
+```bash
+node scripts/deploy-monad.mjs
+```
+
+The script:
+- compiles the contract
+- requests faucet funds if needed
+- deploys to Monad testnet
+- writes the deployed contract address into `.env.local`
+
+## Project structure
+
+```text
+contracts/              Solidity contract
+scripts/                Deployment script
+src/                    Frontend app
+src/lib/contract.ts     Contract ABI + client config
+public/                 Static assets
+```
+
+## Why this project fits Monad
+
+This MVP uses Monad as the trust layer behind a visual, audience-friendly product:
+
+- onchain support actions
+- tokenized participation
+- transparent reactor-level tracking
+- simple demo flow that is easy to pitch live
+
+## Future improvements
+
+- Add real reactor telemetry / oracle-fed updates
+- Attach proof assets to IPFS dynamically
+- Add supporter leaderboard and campaign goals
+- Turn BRT into access/reward mechanics
+- Add admin dashboard for reactor operators
+
+## Submission note
+
+This repository is the hackathon MVP submission codebase for **BioReactor Token (BRT)**.
+It is optimized for a strong live demo: clear visuals, simple wallet interaction, and onchain proof of support on Monad testnet.
