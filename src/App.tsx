@@ -18,6 +18,8 @@ import {
   type Address,
 } from 'viem'
 import { monadTestnet } from 'viem/chains'
+import heroImage from './assets/hero.png'
+import reactorDiagram from './assets/reactor-diagram.svg'
 import './App.css'
 import {
   bioreactorAbi,
@@ -33,20 +35,13 @@ declare global {
   }
 }
 
-const story = [
-  {
-    title: 'Biomasa real, entendible al instante',
-    text: 'Pequeñas granjas de Wolffia convierten espacios mínimos en proteína sostenible, trazable y medible.',
-  },
-  {
-    title: 'Cada reactor cuenta una historia',
-    text: 'La audiencia ve dónde está, cuánto produce, cuánto ahorra y quién lo está impulsando.',
-  },
-  {
-    title: 'Monad detrás del telón',
-    text: 'Las acciones importantes quedan registradas en la red para demostrar que la historia sí pasó.',
-  },
+const impactCards = [
+  { label: 'Agua ahorrada', value: '89–94%', icon: Droplets },
+  { label: 'Proteína estimada', value: '38–41%', icon: Sprout },
+  { label: 'Señal onchain', value: 'Monad', icon: Orbit },
 ]
+
+const reactorVisuals = ['lagoon', 'canopy', 'sunrise']
 
 const defaultReactors: Reactor[] = [
   {
@@ -113,6 +108,8 @@ function App() {
   })
 
   const hasContract = Boolean(contractAddress)
+  const activeReactor = reactors[selectedReactor] ?? reactors[0] ?? defaultReactors[0]
+  const brtSupply = Number(stats.tokenSupply / 10n ** 18n).toLocaleString()
 
   useEffect(() => {
     let alive = true
@@ -232,13 +229,14 @@ function App() {
         transport: custom(window.ethereum),
       })
 
+      const parsedValue = parseEther(supportAmount || '0')
       const hash = await walletClient.writeContract({
         account: walletAddress,
         address: contractAddress,
         abi: bioreactorAbi,
         functionName: 'supportReactor',
         args: [BigInt(selectedReactor), supportName],
-        value: parseEther(supportAmount || '0'),
+        value: parsedValue,
       })
 
       setTxHash(hash)
@@ -247,15 +245,13 @@ function App() {
       updated[selectedReactor] = {
         ...updated[selectedReactor],
         supporters: updated[selectedReactor].supporters + 1,
-        totalSupportedWei:
-          updated[selectedReactor].totalSupportedWei + parseEther(supportAmount || '0'),
+        totalSupportedWei: updated[selectedReactor].totalSupportedWei + parsedValue,
       }
       setReactors(updated)
       setStats((current) => ({
         ...current,
-        totalSupportedWei:
-          current.totalSupportedWei + parseEther(supportAmount || '0'),
-        tokenSupply: current.tokenSupply + parseEther(supportAmount || '0') * 1000n,
+        totalSupportedWei: current.totalSupportedWei + parsedValue,
+        tokenSupply: current.tokenSupply + parsedValue * 1000n,
       }))
     } catch (err) {
       console.error(err)
@@ -267,158 +263,189 @@ function App() {
 
   return (
     <main className="page-shell">
-      <section className="hero">
+      <section className="hero glass">
         <div className="hero-copy">
-          <p className="eyebrow">Monad Blitz Guadalajara · Demo onchain</p>
-          <h1>BioReactor Token</h1>
+          <span className="eyebrow">BioReactor Token · Monad Testnet</span>
+          <h1>Proteína limpia. Infraestructura viva.</h1>
           <p className="lead">
-            Una historia simple: microgranjas urbanas que producen proteína sostenible,
-            registran sus avances en Monad y permiten que cualquiera apoye el siguiente ciclo.
+            Biorreactores urbanos con señal ambiental clara y apoyo onchain en tiempo real.
           </p>
+
           <div className="hero-actions">
             <button className="primary" onClick={connectWallet} type="button">
               <Wallet size={18} />
               {walletAddress ? 'Wallet conectada' : 'Conectar wallet'}
             </button>
-            <a className="secondary" href={explorerUrl || '#pitch'} target="_blank" rel="noreferrer">
+            <a className="secondary" href={explorerUrl || '#reactors'} target="_blank" rel="noreferrer">
               Ver contrato <ArrowUpRight size={18} />
             </a>
           </div>
+
           <div className="status-row">
             <span className="pill success">
               <ShieldCheck size={14} />
-              {hasContract ? 'Contrato listo en Monad testnet' : 'Pendiente de deploy'}
+              {hasContract ? 'Contrato activo' : 'Contrato pendiente'}
             </span>
             <span className="pill">
               <Orbit size={14} />
               {walletAddress ? walletChain : 'Sin wallet'}
             </span>
+            <span className="pill">
+              <MapPin size={14} />
+              Guadalajara · Zapopan · Tlaquepaque
+            </span>
           </div>
         </div>
 
-        <div className="hero-card glass">
-          <div className="metric-main">
-            <span>Señal onchain</span>
-            <strong>{hasContract ? 'Activa' : 'En preparación'}</strong>
-            <p>
-              {hasContract
-                ? 'La demo ya puede leer el contrato, mostrar métricas y recibir apoyos.'
-                : 'La app ya está lista para conectar el contrato cuando termine el deploy.'}
-            </p>
-          </div>
-          <div className="metric-grid">
-            <article>
-              <Droplets />
-              <strong>{stats.totalHarvestedKg} kg</strong>
-              <span>biomasa total</span>
-            </article>
-            <article>
-              <Sprout />
-              <strong>{stats.reactorCount}</strong>
-              <span>reactores</span>
-            </article>
-            <article>
-              <HeartPulse />
+        <div className="hero-visual">
+          <div className="hero-image-card">
+            <img className="hero-image" src={heroImage} alt="Biorreactor urbano" />
+            <div className="hero-orb hero-orb-a" />
+            <div className="hero-orb hero-orb-b" />
+            <div className="hero-float glass">
+              <span>Live impact</span>
               <strong>{formatMon(stats.totalSupportedWei)} MON</strong>
-              <span>apoyo acumulado</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="impact-strip">
+        {impactCards.map((item) => {
+          const Icon = item.icon
+          return (
+            <article className="impact-card glass" key={item.label}>
+              <Icon size={20} />
+              <div>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
             </article>
-            <article>
-              <Wallet />
-              <strong>{Number(stats.tokenSupply / 10n ** 18n).toLocaleString()}</strong>
-              <span>BRT emitidos</span>
-            </article>
-          </div>
-        </div>
+          )
+        })}
       </section>
 
-      <section className="story-grid">
-        {story.map((item) => (
-          <article className="glass story-card" key={item.title}>
-            <h2>{item.title}</h2>
-            <p>{item.text}</p>
-          </article>
-        ))}
+      <section className="dashboard-grid">
+        <article className="glass stat-panel tall">
+          <div className="panel-header">
+            <span>Red activa</span>
+            <strong>{hasContract ? 'Monad online' : 'Esperando deploy'}</strong>
+          </div>
+          <div className="stat-grid">
+            <div>
+              <span>Biomasa</span>
+              <strong>{stats.totalHarvestedKg} kg</strong>
+            </div>
+            <div>
+              <span>Reactores</span>
+              <strong>{stats.reactorCount}</strong>
+            </div>
+            <div>
+              <span>Apoyo</span>
+              <strong>{formatMon(stats.totalSupportedWei)} MON</strong>
+            </div>
+            <div>
+              <span>BRT</span>
+              <strong>{brtSupply}</strong>
+            </div>
+          </div>
+        </article>
+
+        <article className="glass image-panel tall">
+          <img src={reactorDiagram} alt="Diagrama de reactor" />
+          <div className="image-caption">
+            <span>Loop ambiental</span>
+            <strong>Agua · luz · biomasa · comunidad</strong>
+          </div>
+        </article>
       </section>
 
-      <section className="content-grid">
-        <div className="glass panel">
-          <div className="panel-title">
-            <h2>¿Cómo se entiende en 10 segundos?</h2>
-            <span>Para público no técnico</span>
+      <section className="glass reactors-panel" id="reactors">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Reactores</span>
+            <h2>Escoge el frente más fuerte para el demo</h2>
           </div>
-          <div className="steps">
-            <div>
-              <span>1</span>
-              <p>La planta crece en un módulo pequeño y controlado.</p>
-            </div>
-            <div>
-              <span>2</span>
-              <p>El avance se registra para que no quede en promesa.</p>
-            </div>
-            <div>
-              <span>3</span>
-              <p>La gente apoya el proyecto y ve el impacto en pantalla.</p>
-            </div>
-          </div>
+          <span className="section-note">{loading ? 'Sincronizando...' : 'Listo para presentar'}</span>
         </div>
 
-        <div className="glass panel">
-          <div className="panel-title">
-            <h2>Pitch visual</h2>
-            <span>Una frase que gana audiencias</span>
-          </div>
-          <p className="pitch-text">
-            “Convertimos agua, luz y espacio mínimo en proteína sostenible con evidencia pública y apoyo comunitario.”
-          </p>
-          <div className="badge-row">
-            <span className="pill"><MapPin size={14} /> Guadalajara</span>
-            <span className="pill"><Waves size={14} /> IoT + blockchain</span>
-            <span className="pill"><Sprout size={14} /> Wolffia globosa</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="glass panel reactors-panel">
-        <div className="panel-title">
-          <h2>Reactores vivos</h2>
-          <span>{loading ? 'Leyendo datos...' : 'Datos listos para demo'}</span>
-        </div>
         <div className="reactor-grid">
-          {reactors.map((reactor) => (
+          {reactors.map((reactor, index) => (
             <article
               key={reactor.id}
               className={`reactor-card ${reactor.id === selectedReactor ? 'selected' : ''}`}
               onClick={() => setSelectedReactor(reactor.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  setSelectedReactor(reactor.id)
+                }
+              }}
               role="button"
               tabIndex={0}
             >
-              <div>
-                <h3>{reactor.name}</h3>
-                <p>
-                  {reactor.city} · {reactor.species}
-                </p>
+              <div className={`reactor-thumb ${reactorVisuals[index % reactorVisuals.length]}`} />
+              <div className="reactor-copy">
+                <div>
+                  <h3>{reactor.name}</h3>
+                  <p>{reactor.city}</p>
+                </div>
+                <strong>{reactor.proteinPct}% proteína</strong>
               </div>
-              <strong>{reactor.proteinPct}% proteína</strong>
-              <p>{reactor.tagline}</p>
-              <div className="mini-stats">
+              <div className="mini-stats compact">
                 <span>{reactor.biomassKg} kg</span>
-                <span>{reactor.waterSavedPct}% agua ahorrada</span>
+                <span>{reactor.waterSavedPct}% agua</span>
                 <span>{reactor.supporters} apoyos</span>
               </div>
             </article>
           ))}
         </div>
+
+        <div className="reactor-spotlight">
+          <div className="spotlight-copy">
+            <span className="eyebrow">Spotlight</span>
+            <h3>{activeReactor.name}</h3>
+            <p>{activeReactor.tagline}</p>
+
+            <div className="gauge-group">
+              <div>
+                <label>Proteína</label>
+                <div className="gauge"><span style={{ width: `${activeReactor.proteinPct}%` }} /></div>
+              </div>
+              <div>
+                <label>Ahorro de agua</label>
+                <div className="gauge aqua"><span style={{ width: `${activeReactor.waterSavedPct}%` }} /></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="spotlight-meta glass">
+            <div>
+              <span>Especie</span>
+              <strong>{activeReactor.species}</strong>
+            </div>
+            <div>
+              <span>Apoyo acumulado</span>
+              <strong>{formatMon(activeReactor.totalSupportedWei)} MON</strong>
+            </div>
+            <div>
+              <span>Proof URI</span>
+              <strong>{activeReactor.proofURI.replace('ipfs://', '')}</strong>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="support-grid">
-        <div className="glass panel form-panel">
-          <div className="panel-title">
-            <h2>Apoya el reactor</h2>
-            <span>Firma simple, impacto visible</span>
+        <article className="glass panel form-panel">
+          <div className="section-heading tight">
+            <div>
+              <span className="eyebrow">Acción</span>
+              <h2>Apoyar reactor</h2>
+            </div>
           </div>
 
           <label>
-            Nombre para mostrar
+            Nombre
             <input value={supportName} onChange={(e) => setSupportName(e.target.value)} />
           </label>
 
@@ -437,7 +464,7 @@ function App() {
           </label>
 
           <label>
-            MON de apoyo
+            MON
             <input
               value={supportAmount}
               onChange={(e) => setSupportAmount(e.target.value)}
@@ -452,32 +479,43 @@ function App() {
 
           {txHash ? <p className="hint">Tx: {txHash.slice(0, 10)}…{txHash.slice(-8)}</p> : null}
           {error ? <p className="error">{error}</p> : null}
-        </div>
+        </article>
 
-        <div className="glass panel summary-panel">
-          <div className="panel-title">
-            <h2>Lo que ve la audiencia</h2>
-            <span>Sin tecnicismos</span>
+        <article className="glass panel summary-panel">
+          <div className="section-heading tight">
+            <div>
+              <span className="eyebrow">Pitch view</span>
+              <h2>Lo que ve el jurado</h2>
+            </div>
           </div>
-          <ul className="summary-list">
-            <li>Una historia visual con números claros.</li>
-            <li>Un contrato que prueba actividad real en la red.</li>
-            <li>Un gesto simple para apoyar el crecimiento del reactor.</li>
-            <li>Un pitch que mezcla impacto, tecnología y comunidad.</li>
-          </ul>
+
+          <div className="summary-cards">
+            <div>
+              <Waves size={18} />
+              <strong>Visual limpio</strong>
+              <span>Impacto claro en segundos.</span>
+            </div>
+            <div>
+              <ShieldCheck size={18} />
+              <strong>Prueba pública</strong>
+              <span>Actividad verificable en cadena.</span>
+            </div>
+            <div>
+              <HeartPulse size={18} />
+              <strong>Participación</strong>
+              <span>Apoyo simple con wallet.</span>
+            </div>
+          </div>
+
           <div className="footer-note">
-            <p>
-              {hasContract
-                ? `Contrato: ${contractAddress}`
-                : 'Contrato pendiente de despliegue.'}
-            </p>
+            <p>{hasContract ? `Contrato: ${contractAddress}` : 'Contrato pendiente de despliegue.'}</p>
             {hasContract ? (
               <a href={explorerUrl} target="_blank" rel="noreferrer">
                 Abrir explorer <ArrowUpRight size={16} />
               </a>
             ) : null}
           </div>
-        </div>
+        </article>
       </section>
     </main>
   )
